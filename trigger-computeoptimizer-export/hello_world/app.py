@@ -6,7 +6,7 @@ def lambda_handler(event, context):
     client = boto3.client('compute-optimizer')
     response = client.export_ec2_instance_recommendations(
         s3DestinationConfig={
-            'bucket': 'recommendation-compute-ec2',
+            'bucket': '<bucket-name>',
             'keyPrefix': '/'
         },
         
