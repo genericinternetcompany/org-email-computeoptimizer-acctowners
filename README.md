@@ -24,6 +24,8 @@
         * Access to CloudWatch to store execution logs
         * Setup Lambda function to read from the S3 bucked containing .csv files and send the files as an attachment to the email address of the account owners. Refer to the following [this](https://medium.com/@xoor/sending-emails-with-attachments-with-aws-lambda-and-node-js-e6a78500227c) for detailed instructions. 
 4. Deploy Lambdas
+      * trigger-computeoptimizer-export
+      * email-optimizerrecommendations-orgowner
 5. Create CloudWatch Trigger to launch Lambda monthly/daily/weekly
 
 <br>
