@@ -17,7 +17,7 @@ def lambda_handler(event, context):
     RECIPIENT = "<recipient email>"
 
     AWS_REGION = "us-east-1"
-    SUBJECT = "Test : EC2 Optimization Recommendation with Attachment"
+    SUBJECT = "EC2 Optimization Recommendation with Attachment"
 
     # pull the files we need from the S3 bucket into the email.
     # Get the records for the triggered event
