@@ -12,95 +12,124 @@ s3 = boto3.client("s3")
 
 def lambda_handler(event, context):
     
-    SENDER = "ddaksh@amazon.com"
+    #list all the accounts
+    client_org = boto3.client('organizations')
+    response_org = client.list_accounts(
+    NextToken='string',
+    MaxResults=123
+    )
 
-    RECIPIENT = "ddaksh+org1@amazon.com"
+    #acc_email  = ['Accounts']['Email']
 
-    AWS_REGION = "us-east-1"
-    SUBJECT = "Test : EC2 Optimization Recommendation with Attachment"
+    email_list = []
 
-    # pull the files we need from the S3 bucket into the email.
-    # Get the records for the triggered event
-    FILEOBJ = event["Records"][0]
-    
-    BUCKET_NAME = str(FILEOBJ['s3']['bucket']['name'])
-    KEY = str(FILEOBJ['s3']['object']['key'])
+    for item in response_org['Accounts']:
+        email_list += [item['Email']]
+        print(item['Email'])
 
-    # extract the file name from the file.
-    FILE_NAME = os.path.basename(KEY) 
+        # pull the files we need from the S3 bucket into the email.
+        # Get the records for the triggered event
+        FILEOBJ = event["Records"][0]
+        
+        BUCKET_NAME = str(FILEOBJ['s3']['bucket']['name'])
 
-    # Using the file name, create a new file location for the lambda.
-    TMP_FILE_NAME = '/tmp/' +FILE_NAME
+        KEY = str(FILEOBJ['s3']['object']['key'])
 
-    # Download the file/s from the event (extracted above) to the tmp location
-    s3.download_file(BUCKET_NAME, KEY, TMP_FILE_NAME)
+        s3_dir_path = os.path.dirname(KEY)
 
-    ATTACHMENT = TMP_FILE_NAME
+        account_folder = os.path.basename(s3_dir_path)
 
-    # The email body for recipients with non-HTML email clients.
-    BODY_TEXT = "Hello,\r\nPlease see the attached file related to recent EC2 usage for your account."
+        #check if recommendation is for the account owner(id)
+        if(account_folder == item['Id'])
 
-    # The HTML body of the email.
-    BODY_HTML = """\
-    <html>
-    <head></head>
-    <body>
-    <h1>Hello!</h1>
-    <p>Please see the attached file related to recent EC2 usage for your account.</p>
-    </body>
-    </html>
-    """
+            SENDER = "ddaksh@amazon.com"
 
-    # The character encoding for the email.
-    CHARSET = "utf-8"
+            #RECIPIENT = "ddaksh+org1@amazon.com"
+            RECIPIENT = item['Email']
 
-    # New SES resource
-    client = boto3.client('ses',region_name=AWS_REGION)
+            AWS_REGION = "us-east-1"
+            SUBJECT = "Test : EC2 Optimization Recommendation with Attachment"
 
-    # Create a multipart/mixed parent container.
-    msg = MIMEMultipart('mixed')
+            # extract the file name from the file.
+            FILE_NAME = os.path.basename(KEY) 
 
-    msg['Subject'] = SUBJECT 
-    msg['From'] = SENDER 
-    msg['To'] = RECIPIENT
+            # Using the file name, create a new file location for the lambda.
+            TMP_FILE_NAME = '/tmp/' +FILE_NAME
 
-    # Create a multipart/alternative child container.
-    msg_body = MIMEMultipart('alternative')
+            # Download the file/s from the event (extracted above) to the tmp location
+            s3.download_file(BUCKET_NAME, KEY, TMP_FILE_NAME)
 
-    # Encode the text and HTML content and set the character encoding
-    textpart = MIMEText(BODY_TEXT.encode(CHARSET), 'plain', CHARSET)
-    htmlpart = MIMEText(BODY_HTML.encode(CHARSET), 'html', CHARSET)
+            ATTACHMENT = TMP_FILE_NAME
 
-    # Add the text and HTML parts to the child container.
-    msg_body.attach(textpart)
-    msg_body.attach(htmlpart)
+            # The email body for recipients with non-HTML email clients.
+            BODY_TEXT = "Hello,\r\nPlease see the attached file related to recent EC2 usage for your account."
 
-    # Define the attachment part and encode it using MIMEApplication.
-    att = MIMEApplication(open(ATTACHMENT, 'rb').read())
+            # The HTML body of the email.
+            BODY_HTML = """\
+            <html>
+            <head></head>
+            <body>
+            <h1>Hello!</h1>
+            <p>Please see the attached file related to recent EC2 usage for your account.</p>
+            </body>
+            </html>
+            """
 
-    # Add a header to tell the email client to treat this part as an attachment,
-    att.add_header('Content-Disposition','attachment',filename=os.path.basename(ATTACHMENT))
+            # The character encoding for the email.
+            CHARSET = "utf-8"
 
-    msg.attach(msg_body)
+            # New SES resource
+            client = boto3.client('ses',region_name=AWS_REGION)
 
-    # Add the attachment to the parent container.
-    msg.attach(att)
-    print(msg)
-    try:
+            # Create a multipart/mixed parent container.
+            msg = MIMEMultipart('mixed')
 
-        response = client.send_raw_email(
-            Source=SENDER,
-            Destinations=[
-                RECIPIENT
-            ],
-            RawMessage={
-                'Data':msg.as_string(),
-            },
-    #        ConfigurationSetName=CONFIGURATION_SET
-        )
-    # Display an error if something goes wrong. 
-    except ClientError as e:
-        print(e.response['Error']['Message'])
-    else:
-        print("Email sent! Message ID:"),
-        print(response['MessageId'])
+            msg['Subject'] = SUBJECT 
+            msg['From'] = SENDER 
+            msg['To'] = RECIPIENT
+
+            # Create a multipart/alternative child container.
+            msg_body = MIMEMultipart('alternative')
+
+            # Encode the text and HTML content and set the character encoding
+            textpart = MIMEText(BODY_TEXT.encode(CHARSET), 'plain', CHARSET)
+            htmlpart = MIMEText(BODY_HTML.encode(CHARSET), 'html', CHARSET)
+
+            # Add the text and HTML parts to the child container.
+            msg_body.attach(textpart)
+            msg_body.attach(htmlpart)
+
+            # Define the attachment part and encode it using MIMEApplication.
+            att = MIMEApplication(open(ATTACHMENT, 'rb').read())
+
+            # Add a header to tell the email client to treat this part as an attachment,
+            
+            att.add_header('Content-Disposition','attachment',filename=os.path.basename(ATTACHMENT))
+
+            msg.attach(msg_body)
+
+            # Add the attachment to the parent container.
+            msg.attach(att)
+            print(msg)
+            try:
+
+                response = client.send_raw_email(
+                    Source=SENDER,
+                    Destinations=[
+                        RECIPIENT
+                    ],
+                    RawMessage={
+                        'Data':msg.as_string(),
+                    },
+            #        ConfigurationSetName=CONFIGURATION_SET
+                )
+            # Display an error if something goes wrong. 
+            except ClientError as e:
+                print(e.response['Error']['Message'])
+            else:
+                print("Email sent! Message ID:"),
+                print(response['MessageId'])
+
+
+
+        
