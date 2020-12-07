@@ -12,9 +12,9 @@ s3 = boto3.client("s3")
 
 def lambda_handler(event, context):
     
-    SENDER = "ddaksh@amazon.com"
+    SENDER = "<sender email>"
 
-    RECIPIENT = "ddaksh+org1@amazon.com"
+    RECIPIENT = "<recipient email>"
 
     AWS_REGION = "us-east-1"
     SUBJECT = "Test : EC2 Optimization Recommendation with Attachment"
