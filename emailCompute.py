@@ -40,7 +40,7 @@ def lambda_handler(event, context):
         account_folder = os.path.basename(s3_dir_path)
 
         #check if recommendation is for the account owner(id)
-        if(account_folder == item['Id'])
+        if account_folder == item['Id']:
 
             SENDER = "ddaksh@amazon.com"
 
